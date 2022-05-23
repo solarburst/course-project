@@ -1,0 +1,21 @@
+.section__wrap {
+  display: flex;
+  justify-content: space-between;
+}
+
+.section__wrap__title {
+  margin: auto;
+}
+
+.section__wrap__title span {
+  color: #2b88d9;
+}
+
+.section__wrap__title__text {
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  font-size: 62px;
+  line-height: 82px;
+  color: #000000;
+  text-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
