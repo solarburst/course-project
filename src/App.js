@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { firebaseApp, database } from "./firebase";
-import { getDatabase, ref, onValue } from "firebase/database";
+import { getDatabase, ref, get, child } from "firebase/database";
 import Header from "./components/Header";
 import Section from "./components/Section";
 import Footer from "./components/Footer";
@@ -14,47 +14,67 @@ const App = () => {
   const [message, setMessage] = useState("");
   const [params, setParams] = useState();
 
-  const fetchBmi = () => {
-    const dbRef = getDatabase();
-    const stats = ref(dbRef, `${gender}/${age}/`);
-    onValue(stats, (snapshot) => {
-      const data = snapshot.val();
-      setParams(data);
-    });
-  };
+  const fetchBmi = useCallback(() => {
+    const dbRef = ref(getDatabase());
+    get(child(dbRef, `${gender}/${age}/`))
+      .then((snapshot) => {
+        if (snapshot.exists()) {
+          console.log(snapshot.val());
+          const data = snapshot.val();
+          setParams(data);
+        } else {
+          console.log("No data available");
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, [age, gender]);
 
-  useEffect(() => {
+  const calculateBmi = () => {
     if (params) {
       const { veryLow, low, normal, high, veryHigh } = params;
 
-      if (weight === 0 || height === 0 || age === 0) {
+      if (weight <= 0 || height <= 0 || age <= 0 || age >= 18) {
         alert("Введите валидные данные");
       } else {
         let bmi = weight / ((height / 100) * (height / 100));
         setBMI(bmi.toFixed(1));
 
         if (bmi < veryLow) {
-          setMessage("У вас критически недостаточный вес");
+          setMessage(
+            `Ваш пол: ${gender}. Ваш возраст: ${age}. У вас критически недостаточный вес`
+          );
         }
 
         if (bmi >= veryLow && bmi < low) {
-          setMessage("У вас недостаточный вес");
+          setMessage(
+            `Ваш пол: ${gender}. Ваш возраст: ${age}. У вас недостаточный вес`
+          );
         }
 
         if (bmi >= low && bmi < high) {
-          setMessage("У вас нормальный вес");
+          setMessage(
+            `Ваш пол: ${gender}. Ваш возраст: ${age}. У вас нормальный вес`
+          );
         }
 
         if (bmi >= high && bmi < veryHigh) {
-          setMessage("У вас лишний вес");
+          setMessage(
+            `Ваш пол: ${gender}. Ваш возраст: ${age}. У вас лишний вес`
+          );
         }
 
         if (bmi > veryHigh) {
-          setMessage("У вас ожирение");
+          setMessage(`Ваш пол: ${gender}. Ваш возраст: ${age}. У вас ожирение`);
         }
       }
     }
-  }, [age, height, weight, params]);
+  };
+
+  useEffect(() => {
+    fetchBmi();
+  }, [gender, age, height, weight, fetchBmi]);
 
   console.log("params", params);
 
@@ -97,7 +117,7 @@ const App = () => {
           />
         </div>
         <div>
-          <button className="btn" onClick={fetchBmi}>
+          <button className="btn" onClick={calculateBmi}>
             Подтвердить
           </button>
         </div>
